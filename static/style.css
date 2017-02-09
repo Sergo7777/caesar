@@ -1,0 +1,34 @@
+   		textarea{
+            width: 100%;
+            height: auto;
+            resize: none;
+            overflow: auto;
+          }
+        input {
+        	width: 60px;
+        }
+        #ROT{
+        	margin: 5% 0 0 0;
+        	padding-left: 3%;
+        }
+        #code {
+        	margin-top: 3%;
+        }
+
+        #code {
+        	display: block;
+        	text-align: center;
+        }
+        body{
+        	background-color: #f7f7f9;
+        }
+        .color-bg {
+		    background-color: #f9f9f9;
+		    border-top: 1px solid #e0e0e0;
+		}
+		#encrypt {
+			margin-left: 32%;
+		}
+        #footer{
+            height: 100px;
+        }

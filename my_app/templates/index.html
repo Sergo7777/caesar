@@ -1,0 +1,153 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+<head>
+   	<meta charset="utf-8"/>
+   	<title>Caesar cipher</title>
+   	<meta name="discription" value="Шифрование и расшифрование текста с помощью шифра Цезаря" >
+   	<meta name="viewport" content="width=device-width, initial-scale=1">
+   	<meta content="Sergei Denisenko" name="author">
+
+   	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
+    <link rel="stylesheet"  href="{% static 'data.tsv' %}">
+    <script
+        src="https://code.jquery.com/jquery-3.1.1.js"
+        integrity="sha256-16cdPddA6VdVInumRGo6IbivbERE8p7CQR3HzTBuELA="
+        crossorigin="anonymous"></script>
+   	<script src="https://d3js.org/d3.v4.min.js"></script>
+    <script src="{% static 'script.js' %}"></script>
+
+</head>
+<body>
+	<div class="container">
+		<legend>Шифр Цезаря <br></legend>
+    <p>Это шифр простой подстановки, при шифровании каждый символ текста заменяется символом, находящимся на некотором постоянном расстоянии левее или правее в алфавите. При дешифровании происходит обратная операция. В левом окне введите текст, затем выберите сдвиг (ROT) и нажмите &laquo; шивровать или дешивровать &raquo;.</p>
+		<div class="row">
+			<form class="cipher" id="ajax_form" method="POST" action="">
+      {% csrf_token %}
+				<div id="left" class="col-xs-12 col-md-5">
+					<textarea name="text" autofocus="" rows="10" class="span6" id="text" placeholder="Введите текст..."></textarea>
+				</div>
+				<div id="ROT" class="col-sm-2">
+				    <div class="btn-group" >
+				      <button class="btn btn-default" type="submit">ROT</button>
+						  <input class="btn btn-default" id="text2" name="text2" type="text2">
+					</div>
+					<div id="code1" class="btn-group" role="group" aria-label="...">
+					    <button type="button" class="ed" name="encrypt" value="encrypt" id="encrypt" form="cipher">&laquo;</button>
+					</div>
+          <div id="code2" class="btn-group" role="group" aria-label="...">
+              <button type="button" class="ed" name="decrypt" value="decrypt" id="decrypt" form="cipher">&raquo;</button>
+          </div>
+				</div>
+				<div id="right" class="col-xs-12 col-md-5">
+					<textarea name="result" readonly="" rows="10" class="span6" id="result" placeholder="Текстовое поле для отображения результата"></textarea>
+				</div>
+			</form>
+		</div>
+    <canvas id="canvas" class="col-md-6 col-md-offset-3" width="600" height="300"></canvas>
+		<div id="alert" class="alert alert-success col-md-6 col-md-offset-3" role="alert">
+			<span id="exit">место для вывода информационного сообщения с предположением нужного смещения</span>
+      <br>
+      <span><span id="key"> </span></span>
+		</div>
+	</div>
+
+  <script>
+
+var canvas = document.querySelector("canvas"),
+    context = canvas.getContext("2d");
+
+var margin = {top: 20, right: 20, bottom: 30, left: 40},
+    width = canvas.width - margin.left - margin.right,
+    height = canvas.height - margin.top - margin.bottom;
+
+var x = d3.scaleBand()
+    .rangeRound([0, width])
+    .padding(0.1);
+
+var y = d3.scaleLinear()
+    .rangeRound([height, 0]);
+
+context.translate(margin.left, margin.top);
+
+d3.tsv("/static/data.tsv", function(d) {
+  d.frequency = +d.frequency;
+  return d;
+}, function(error, data) {
+  if (error) throw error;
+
+  x.domain(data.map(function(d) { return d.letter; }));
+  y.domain([0, d3.max(data, function(d) { return d.frequency; })]);
+
+  var yTickCount = 10,
+      yTicks = y.ticks(yTickCount),
+      yTickFormat = y.tickFormat(yTickCount, "%");
+
+  context.beginPath();
+  x.domain().forEach(function(d) {
+    context.moveTo(x(d) + x.bandwidth() / 2, height);
+    context.lineTo(x(d) + x.bandwidth() / 2, height + 6);
+  });
+  context.strokeStyle = "black";
+  context.stroke();
+
+  context.textAlign = "center";
+  context.textBaseline = "top";
+  x.domain().forEach(function(d) {
+    context.fillText(d, x(d) + x.bandwidth() / 2, height + 6);
+  });
+
+  context.beginPath();
+  yTicks.forEach(function(d) {
+    context.moveTo(0, y(d) + 0.5);
+    context.lineTo(-6, y(d) + 0.5);
+  });
+  context.strokeStyle = "black";
+  context.stroke();
+
+  context.textAlign = "right";
+  context.textBaseline = "middle";
+  yTicks.forEach(function(d) {
+    context.fillText(yTickFormat(d), -9, y(d));
+  });
+
+  context.beginPath();
+  context.moveTo(-6.5, 0 + 0.5);
+  context.lineTo(0.5, 0 + 0.5);
+  context.lineTo(0.5, height + 0.5);
+  context.lineTo(-6.5, height + 0.5);
+  context.strokeStyle = "black";
+  context.stroke();
+
+  context.save();
+  context.rotate(-Math.PI / 2);
+  context.textAlign = "right";
+  context.textBaseline = "top";
+  context.font = "bold 10px sans-serif";
+  context.fillText("Frequency", -10, 10);
+  context.restore();
+
+  context.fillStyle = "steelblue";
+  data.forEach(function(d) {
+    context.fillRect(x(d.letter), y(d.frequency), x.bandwidth(), height - y(d.frequency));
+  });
+});
+
+</script>
+	<footer id="footer" class="color-bg">
+		<div class="copyright-bar">
+			<div class="container">
+				<div class="col-xs-12 col-sm-6 no-margin">                
+           			<div class="copyright">              
+            			<a href="/">2017 © Sergei Denisenko </a> - все права защищены                 
+           			</div>
+           		</div>
+           	</div>          
+        </div>
+	</footer>
+	<!-- Javascript Inclusion-->
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+</body>
+</html>

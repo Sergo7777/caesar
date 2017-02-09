@@ -1,0 +1,48 @@
+<script>
+    $(document).ready(function(){
+      $("#encrypt, #decrypt").click(function (event) {
+        var postData = {
+          "text": $("#text").val(),
+          "text2": $("#text2").val(),
+          "mode" : event.target.id
+       };
+        $.ajax({
+            url: "encrypted",
+            type: "POST",
+            data: postData,
+            dataType: "json",
+            cache: false,
+            success: function(response) {
+                $("#result").text(response)
+            },
+            error : function(xhr,errmsg,err) {
+             console.log(xhr.status + ": " + xhr.responseText);
+            }
+        });
+        return false;
+    });
+    });  
+</script>
+<script>
+$(document).ready(function(){
+  $('textarea').on('input', function () {
+    var msg = {
+      "text": $(this).val(),
+    };
+   $.ajax({
+            url: "diagram",
+            type: "POST",
+            data: msg,
+            dataType: "json",
+            cache: false,
+            success: function(response) {
+                $("#exit").text(response)
+            },
+            error : function(xhr,errmsg,err) {
+             console.log(xhr.status + ": " + xhr.responseText);
+            }
+        });
+        return false;
+    });
+});
+</script>
